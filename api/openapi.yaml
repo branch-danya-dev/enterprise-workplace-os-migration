@@ -1,0 +1,1328 @@
+openapi: 3.0.3
+
+info:
+  title: Migration Management API
+  version: 1.0.0
+  description: >
+    Simplified portfolio API for managing enterprise workplace migration
+    from Microsoft Windows to Astra Linux.
+
+    The API covers migration scheduling, postponement requests,
+    migration attempts, blockers and workplace migration data.
+
+    This specification represents a portfolio reconstruction and does not
+    describe a real production interface used by the organization.
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Workplaces
+  - name: Migration Schedules
+  - name: Postponement Requests
+  - name: Migration Attempts
+  - name: Migration Blockers
+  - name: Software
+
+paths:
+
+  /workplaces:
+    get:
+      tags:
+        - Workplaces
+      summary: Get workplaces
+      operationId: getWorkplaces
+      parameters:
+        - name: migrationStatus
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/MigrationStatus'
+
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+
+        - name: location
+          in: query
+          required: false
+          schema:
+            type: string
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+
+      responses:
+        '200':
+          description: Workplace list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkplacePage'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /workplaces/{workplaceId}:
+    get:
+      tags:
+        - Workplaces
+      summary: Get workplace
+      operationId: getWorkplace
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+
+      responses:
+        '200':
+          description: Workplace details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workplace'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+
+  /workplaces/{workplaceId}/software:
+    get:
+      tags:
+        - Workplaces
+      summary: Get workplace software dependencies
+      operationId: getWorkplaceSoftware
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+
+      responses:
+        '200':
+          description: Workplace software dependencies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkplaceSoftwareList'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+
+  /workplaces/{workplaceId}/migration-attempts:
+    get:
+      tags:
+        - Workplaces
+      summary: Get workplace migration attempts
+      operationId: getWorkplaceMigrationAttempts
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+
+      responses:
+        '200':
+          description: Migration attempt history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationAttemptList'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+
+  /workplaces/{workplaceId}/blockers:
+    get:
+      tags:
+        - Workplaces
+      summary: Get workplace migration blockers
+      operationId: getWorkplaceBlockers
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+
+      responses:
+        '200':
+          description: Workplace blockers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationBlockerList'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+
+  /migration-schedules:
+    post:
+      tags:
+        - Migration Schedules
+      summary: Create migration schedule
+      operationId: createMigrationSchedule
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMigrationScheduleRequest'
+
+      responses:
+        '201':
+          description: Migration schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+        '409':
+          description: Active schedule already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: ACTIVE_SCHEDULE_ALREADY_EXISTS
+                message: The workplace already has an active migration schedule
+                details: null
+
+
+  /migration-schedules/{scheduleId}:
+    get:
+      tags:
+        - Migration Schedules
+      summary: Get migration schedule
+      operationId: getMigrationSchedule
+      parameters:
+        - $ref: '#/components/parameters/ScheduleId'
+
+      responses:
+        '200':
+          description: Migration schedule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+
+        '404':
+          $ref: '#/components/responses/ScheduleNotFound'
+
+    patch:
+      tags:
+        - Migration Schedules
+      summary: Update migration schedule
+      operationId: updateMigrationSchedule
+      parameters:
+        - $ref: '#/components/parameters/ScheduleId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMigrationScheduleRequest'
+
+      responses:
+        '200':
+          description: Migration schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/ScheduleNotFound'
+
+        '409':
+          description: Schedule state conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /postponement-requests:
+    post:
+      tags:
+        - Postponement Requests
+      summary: Create postponement request
+      operationId: createPostponementRequest
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostponementRequest'
+
+      responses:
+        '201':
+          description: Postponement request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+        '409':
+          description: Active postponement request already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /postponement-requests/{requestId}:
+    get:
+      tags:
+        - Postponement Requests
+      summary: Get postponement request
+      operationId: getPostponementRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+
+      responses:
+        '200':
+          description: Postponement request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+
+        '404':
+          $ref: '#/components/responses/PostponementRequestNotFound'
+
+    patch:
+      tags:
+        - Postponement Requests
+      summary: Update postponement request decision
+      operationId: updatePostponementRequest
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostponementRequest'
+
+      responses:
+        '200':
+          description: Postponement request updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/PostponementRequestNotFound'
+
+        '409':
+          description: Postponement request already resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /migration-attempts:
+    post:
+      tags:
+        - Migration Attempts
+      summary: Register migration attempt
+      operationId: createMigrationAttempt
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMigrationAttemptRequest'
+
+      responses:
+        '201':
+          description: Migration attempt registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationAttempt'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/WorkplaceNotFound'
+
+
+  /migration-attempts/{attemptId}:
+    get:
+      tags:
+        - Migration Attempts
+      summary: Get migration attempt
+      operationId: getMigrationAttempt
+      parameters:
+        - $ref: '#/components/parameters/AttemptId'
+
+      responses:
+        '200':
+          description: Migration attempt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationAttempt'
+
+        '404':
+          $ref: '#/components/responses/MigrationAttemptNotFound'
+
+
+  /migration-blockers:
+    post:
+      tags:
+        - Migration Blockers
+      summary: Create migration blocker
+      operationId: createMigrationBlocker
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMigrationBlockerRequest'
+
+      responses:
+        '201':
+          description: Migration blocker created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationBlocker'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          description: Workplace or support team not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '409':
+          description: Duplicate active blocker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /migration-blockers/{blockerId}:
+    patch:
+      tags:
+        - Migration Blockers
+      summary: Update migration blocker
+      operationId: updateMigrationBlocker
+      parameters:
+        - $ref: '#/components/parameters/BlockerId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMigrationBlockerRequest'
+
+      responses:
+        '200':
+          description: Migration blocker updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationBlocker'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/BlockerNotFound'
+
+        '409':
+          description: Blocker state conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /software:
+    get:
+      tags:
+        - Software
+      summary: Get software catalogue
+      operationId: getSoftware
+
+      parameters:
+        - name: businessCriticality
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - low
+              - medium
+              - high
+              - critical
+
+        - name: blockerOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+
+      responses:
+        '200':
+          description: Software list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SoftwarePage'
+
+
+  /software/{softwareId}/compatibility:
+    get:
+      tags:
+        - Software
+      summary: Get software compatibility assessment
+      operationId: getSoftwareCompatibility
+
+      parameters:
+        - $ref: '#/components/parameters/SoftwareId'
+
+      responses:
+        '200':
+          description: Software compatibility assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatibilityAssessment'
+
+        '404':
+          description: Software or compatibility assessment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+
+  parameters:
+
+    WorkplaceId:
+      name: workplaceId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    ScheduleId:
+      name: scheduleId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    AttemptId:
+      name: attemptId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    BlockerId:
+      name: blockerId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    SoftwareId:
+      name: softwareId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+
+  responses:
+
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    WorkplaceNotFound:
+      description: Workplace not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: WORKPLACE_NOT_FOUND
+            message: Workplace was not found
+            details: null
+
+    ScheduleNotFound:
+      description: Migration schedule not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    PostponementRequestNotFound:
+      description: Postponement request not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    MigrationAttemptNotFound:
+      description: Migration attempt not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    BlockerNotFound:
+      description: Migration blocker not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+
+  schemas:
+
+    MigrationStatus:
+      type: string
+      enum:
+        - scheduled
+        - ready
+        - pending
+        - postponed
+        - blocked
+        - migration_in_progress
+        - manual_migration_required
+        - dual_boot
+        - migrated
+
+
+    ReadinessStatus:
+      type: string
+      enum:
+        - green
+        - yellow
+        - red
+
+
+    ScheduleStatus:
+      type: string
+      enum:
+        - scheduled
+        - postponed
+        - blocked
+        - completed
+        - cancelled
+
+
+    Workplace:
+      type: object
+      required:
+        - workplaceId
+        - userId
+        - currentOs
+        - targetOs
+        - migrationStatus
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+
+        userId:
+          type: integer
+          format: int64
+
+        profileId:
+          type: integer
+          format: int64
+          nullable: true
+
+        currentOs:
+          type: string
+
+        targetOs:
+          type: string
+
+        location:
+          type: string
+          nullable: true
+
+        workplaceType:
+          type: string
+          nullable: true
+
+        migrationStatus:
+          $ref: '#/components/schemas/MigrationStatus'
+
+
+    WorkplacePage:
+      type: object
+      required:
+        - items
+        - page
+        - pageSize
+        - total
+
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workplace'
+
+        page:
+          type: integer
+          minimum: 1
+
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+
+        total:
+          type: integer
+          minimum: 0
+
+
+    WorkplaceSoftware:
+      type: object
+      required:
+        - softwareId
+        - softwareName
+        - required
+        - businessCritical
+        - currentStatus
+
+      properties:
+        softwareId:
+          type: integer
+          format: int64
+
+        softwareName:
+          type: string
+
+        required:
+          type: boolean
+
+        businessCritical:
+          type: boolean
+
+        currentStatus:
+          type: string
+          enum:
+            - available
+            - pending
+            - blocked
+            - windows_only
+
+
+    WorkplaceSoftwareList:
+      type: object
+      required:
+        - workplaceId
+        - software
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+
+        software:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkplaceSoftware'
+
+
+    CreateMigrationScheduleRequest:
+      type: object
+      required:
+        - workplaceId
+        - plannedDate
+        - readinessStatus
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+          minimum: 1
+
+        plannedDate:
+          type: string
+          format: date
+
+        readinessStatus:
+          $ref: '#/components/schemas/ReadinessStatus'
+
+        migrationWave:
+          type: string
+          nullable: true
+
+
+    UpdateMigrationScheduleRequest:
+      type: object
+      minProperties: 1
+
+      properties:
+        plannedDate:
+          type: string
+          format: date
+
+        readinessStatus:
+          $ref: '#/components/schemas/ReadinessStatus'
+
+        scheduleStatus:
+          $ref: '#/components/schemas/ScheduleStatus'
+
+        migrationWave:
+          type: string
+          nullable: true
+
+
+    MigrationSchedule:
+      type: object
+      required:
+        - scheduleId
+        - workplaceId
+        - plannedDate
+        - readinessStatus
+        - scheduleStatus
+
+      properties:
+        scheduleId:
+          type: integer
+          format: int64
+
+        workplaceId:
+          type: integer
+          format: int64
+
+        plannedDate:
+          type: string
+          format: date
+
+        readinessStatus:
+          $ref: '#/components/schemas/ReadinessStatus'
+
+        scheduleStatus:
+          $ref: '#/components/schemas/ScheduleStatus'
+
+        migrationWave:
+          type: string
+          nullable: true
+
+
+    CreatePostponementRequest:
+      type: object
+      required:
+        - workplaceId
+        - serviceDeskTicketId
+        - reason
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+          minimum: 1
+
+        serviceDeskTicketId:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+
+    UpdatePostponementRequest:
+      type: object
+      required:
+        - approvalStatus
+
+      properties:
+        approvalStatus:
+          type: string
+          enum:
+            - approved
+            - rejected
+
+        newMigrationDate:
+          type: string
+          format: date
+          nullable: true
+
+      description: >
+        newMigrationDate is required by business validation when
+        approvalStatus is approved.
+
+
+    PostponementRequest:
+      type: object
+      required:
+        - requestId
+        - workplaceId
+        - serviceDeskTicketId
+        - reason
+        - approvalStatus
+        - newMigrationDate
+
+      properties:
+        requestId:
+          type: integer
+          format: int64
+
+        workplaceId:
+          type: integer
+          format: int64
+
+        serviceDeskTicketId:
+          type: string
+
+        reason:
+          type: string
+
+        approvalStatus:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+
+        newMigrationDate:
+          type: string
+          format: date
+          nullable: true
+
+
+    CreateMigrationAttemptRequest:
+      type: object
+      required:
+        - workplaceId
+        - executionType
+        - result
+        - migrationDate
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+          minimum: 1
+
+        executionType:
+          type: string
+          enum:
+            - automated
+            - manual
+
+        result:
+          type: string
+          enum:
+            - successful
+            - failed
+
+        migrationDate:
+          type: string
+          format: date-time
+
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+        technicalError:
+          type: string
+          nullable: true
+          maxLength: 5000
+
+
+    MigrationAttempt:
+      type: object
+      required:
+        - attemptId
+        - workplaceId
+        - executionType
+        - result
+        - migrationDate
+
+      properties:
+        attemptId:
+          type: integer
+          format: int64
+
+        workplaceId:
+          type: integer
+          format: int64
+
+        executionType:
+          type: string
+          enum:
+            - automated
+            - manual
+
+        result:
+          type: string
+          enum:
+            - successful
+            - failed
+
+        migrationDate:
+          type: string
+          format: date-time
+
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+        technicalError:
+          type: string
+          nullable: true
+
+
+    MigrationAttemptList:
+      type: object
+      required:
+        - workplaceId
+        - attempts
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+
+        attempts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MigrationAttempt'
+
+
+    CreateMigrationBlockerRequest:
+      type: object
+      required:
+        - workplaceId
+        - blockerType
+        - description
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+          minimum: 1
+
+        blockerType:
+          type: string
+          enum:
+            - software_compatibility
+            - software_readiness
+            - access
+            - information_security
+            - infrastructure
+            - hardware
+            - business_dependency
+            - other
+
+        description:
+          type: string
+          minLength: 1
+          maxLength: 5000
+
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+
+
+    UpdateMigrationBlockerRequest:
+      type: object
+      minProperties: 1
+
+      properties:
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+
+        status:
+          type: string
+          enum:
+            - open
+            - in_progress
+            - resolved
+
+
+    MigrationBlocker:
+      type: object
+      required:
+        - blockerId
+        - workplaceId
+        - blockerType
+        - description
+        - status
+        - createdAt
+
+      properties:
+        blockerId:
+          type: integer
+          format: int64
+
+        workplaceId:
+          type: integer
+          format: int64
+
+        blockerType:
+          type: string
+
+        description:
+          type: string
+
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+
+        status:
+          type: string
+          enum:
+            - open
+            - in_progress
+            - resolved
+
+        createdAt:
+          type: string
+          format: date-time
+
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+
+    MigrationBlockerList:
+      type: object
+      required:
+        - workplaceId
+        - blockers
+
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+
+        blockers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MigrationBlocker'
+
+
+    Software:
+      type: object
+      required:
+        - softwareId
+        - softwareName
+
+      properties:
+        softwareId:
+          type: integer
+          format: int64
+
+        softwareName:
+          type: string
+
+        businessCriticality:
+          type: string
+          nullable: true
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+
+        astraEquivalent:
+          type: string
+          nullable: true
+
+
+    SoftwarePage:
+      type: object
+      required:
+        - items
+        - total
+
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Software'
+
+        total:
+          type: integer
+          minimum: 0
+
+
+    CompatibilityAssessment:
+      type: object
+      required:
+        - softwareId
+        - softwareName
+        - compatibilityStatus
+        - replacementAvailable
+        - blockerFlag
+        - assessmentDate
+
+      properties:
+        softwareId:
+          type: integer
+          format: int64
+
+        softwareName:
+          type: string
+
+        compatibilityStatus:
+          type: string
+          enum:
+            - compatible
+            - partial
+            - under_development
+            - no_replacement
+            - unknown
+
+        replacementAvailable:
+          type: boolean
+
+        replacementMaturity:
+          type: string
+          nullable: true
+
+        blockerFlag:
+          type: boolean
+
+        assessmentDate:
+          type: string
+          format: date
+
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+
+        notes:
+          type: string
+          nullable: true
+
+
+    ValidationErrorDetail:
+      type: object
+      required:
+        - field
+        - message
+
+      properties:
+        field:
+          type: string
+
+        message:
+          type: string
+
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+
+      properties:
+        code:
+          type: string
+
+        message:
+          type: string
+
+        details:
+          nullable: true
+          oneOf:
+            - type: object
+            - type: array
+              items:
+                $ref: '#/components/schemas/ValidationErrorDetail'

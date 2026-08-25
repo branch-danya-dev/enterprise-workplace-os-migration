@@ -1,0 +1,71 @@
+@startuml
+title Automated Migration Failure and Manual Recovery
+
+participant "Automated Migration Tool" as Tool
+participant "Migration Management API" as API
+database "Migration Database" as DB
+participant "Workplace Support" as Support
+actor User
+
+Tool -> Tool: Start automated migration
+
+alt Migration successful
+
+    Tool -> API: POST /api/v1/migration-attempts\nexecutionType = automated\nresult = successful
+
+    API -> DB: Create migration attempt
+    API -> DB: Update workplace status = migrated
+    DB --> API: Updated migration data
+
+    API --> Tool: 201 Created
+
+else Migration failed
+
+    Tool -> API: POST /api/v1/migration-attempts\nexecutionType = automated\nresult = failed\ntechnicalError = ...
+
+    API -> DB: Create failed migration attempt
+    API -> DB: Update workplace status = manual_migration_required
+    DB --> API: Updated migration data
+
+    API --> Tool: 201 Created
+
+    Support -> API: GET /api/v1/workplaces\n?migrationStatus=manual_migration_required
+
+    API -> DB: Find workplaces requiring manual migration
+    DB --> API: Workplace list
+    API --> Support: 200 OK
+
+    Support -> User: Contact user / take over workstation
+    User --> Support: Workstation available
+
+    Support -> Support: Remove Windows
+    Support -> Support: Install Astra Linux
+    Support -> Support: Restore workplace environment
+    Support -> Support: Validate workplace operation
+
+    alt Manual migration successful
+
+        Support -> API: POST /api/v1/migration-attempts\nexecutionType = manual\nresult = successful
+
+        API -> DB: Create manual migration attempt
+        API -> DB: Update workplace status = migrated
+        DB --> API: Updated migration data
+
+        API --> Support: 201 Created
+
+        Support --> User: Return operational workplace
+
+    else Manual migration failed
+
+        Support -> API: POST /api/v1/migration-attempts\nexecutionType = manual\nresult = failed\ntechnicalError = ...
+
+        API -> DB: Create failed manual attempt
+        API -> DB: Keep workplace in exception state
+        DB --> API: Updated migration data
+
+        API --> Support: 201 Created
+
+    end
+end
+
+@enduml

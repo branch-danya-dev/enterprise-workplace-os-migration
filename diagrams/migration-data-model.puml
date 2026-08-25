@@ -1,0 +1,142 @@
+@startuml
+title Enterprise Workplace Migration - Conceptual Data Model
+
+hide methods
+hide stereotypes
+
+entity User {
+  * user_id : string
+  --
+  full_name : string
+  department : string
+  business_role : string
+  work_mode : string
+}
+
+entity Workplace {
+  * workplace_id : string
+  --
+  user_id : string
+  profile_id : string
+  current_os : string
+  target_os : string
+  location : string
+  migration_status : string
+}
+
+entity WorkplaceProfile {
+  * profile_id : string
+  --
+  profile_name : string
+  description : string
+}
+
+entity Software {
+  * software_id : string
+  --
+  software_name : string
+  software_category : string
+  astra_equivalent : string
+  business_criticality : string
+}
+
+entity WorkplaceSoftware {
+  * workplace_id : string
+  * software_id : string
+  --
+  required : boolean
+  business_critical : boolean
+  current_status : string
+}
+
+entity CompatibilityAssessment {
+  * assessment_id : string
+  --
+  software_id : string
+  compatibility_status : string
+  replacement_available : boolean
+  replacement_maturity : string
+  blocker_flag : boolean
+  assessment_date : date
+  responsible_team_id : string
+}
+
+entity MigrationSchedule {
+  * schedule_id : string
+  --
+  workplace_id : string
+  planned_date : date
+  readiness_status : string
+  current_status : string
+  migration_wave : string
+}
+
+entity PostponementRequest {
+  * request_id : string
+  --
+  workplace_id : string
+  service_desk_ticket_id : string
+  reason : string
+  approval_status : string
+  new_migration_date : date
+}
+
+entity MigrationAttempt {
+  * attempt_id : string
+  --
+  workplace_id : string
+  migration_date : datetime
+  execution_type : string
+  result : string
+  technical_error : string
+}
+
+entity MigrationBlocker {
+  * blocker_id : string
+  --
+  workplace_id : string
+  blocker_type : string
+  description : string
+  responsible_team_id : string
+  status : string
+  created_date : date
+  resolved_date : date
+}
+
+entity AccessDependency {
+  * access_id : string
+  --
+  user_id : string
+  access_type : string
+  target_system : string
+  security_approval_required : boolean
+  status : string
+}
+
+entity SupportTeam {
+  * team_id : string
+  --
+  team_name : string
+  responsibility_area : string
+}
+
+User ||--o{ Workplace : assigned to
+
+WorkplaceProfile ||--o{ Workplace : classifies
+
+Workplace ||--o{ WorkplaceSoftware : has
+Software ||--o{ WorkplaceSoftware : required by
+
+Software ||--o{ CompatibilityAssessment : assessed through
+
+Workplace ||--o{ MigrationSchedule : scheduled through
+Workplace ||--o{ PostponementRequest : may have
+Workplace ||--o{ MigrationAttempt : migrated through
+Workplace ||--o{ MigrationBlocker : may have
+
+User ||--o{ AccessDependency : has
+
+SupportTeam ||--o{ MigrationBlocker : responsible for
+SupportTeam ||--o{ CompatibilityAssessment : performs
+
+@enduml

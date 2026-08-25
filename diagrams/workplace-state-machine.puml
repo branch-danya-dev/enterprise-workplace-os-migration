@@ -1,0 +1,44 @@
+@startuml
+title Workplace Migration State Machine
+
+[*] --> Scheduled
+
+Scheduled --> Ready : readiness confirmed
+Scheduled --> Postponed : postponement approved
+Scheduled --> Blocked : blocker identified
+
+Ready --> MigrationInProgress : migration started
+Ready --> Postponed : postponement approved
+Ready --> Blocked : blocker identified
+
+Postponed --> Scheduled : new migration date assigned
+Postponed --> Blocked : blocker identified
+
+Blocked --> Scheduled : blocker resolved\nand new date assigned
+Blocked --> Ready : blocker resolved\nand readiness confirmed
+
+MigrationInProgress --> Migrated : automated migration successful
+MigrationInProgress --> ManualMigrationRequired : automated migration failed
+MigrationInProgress --> DualBoot : migration completed\nwith unresolved Windows dependency
+
+ManualMigrationRequired --> Migrated : manual migration successful
+ManualMigrationRequired --> Blocked : manual migration cannot proceed
+
+DualBoot --> Migrated : Windows dependency removed
+DualBoot --> Blocked : new blocking dependency identified
+
+Migrated --> FullyOperational : operational validation completed
+
+FullyOperational --> [*]
+
+state Scheduled
+state Ready
+state Postponed
+state Blocked
+state MigrationInProgress
+state ManualMigrationRequired
+state DualBoot
+state Migrated
+state FullyOperational
+
+@enduml

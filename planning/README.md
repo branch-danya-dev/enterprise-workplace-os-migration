@@ -6,9 +6,10 @@ Planning answers:
 
 > **When is migration intended to happen, and how does that intention change?**
 
-## Canonical document
+## Canonical documents
 
-→ [`scheduling-and-postponement.md`](scheduling-and-postponement.md) owns migration-wave/date semantics, user notification, postponement review and rescheduling rules.
+- [`scheduling-and-postponement.md`](scheduling-and-postponement.md) — migration-wave/date semantics, user notification, postponement review and rescheduling rules;
+- [`visual-model.md`](visual-model.md) — postponement sequence and active/superseded schedule lifecycle.
 
 ## Core distinction
 

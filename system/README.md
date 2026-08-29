@@ -14,7 +14,7 @@ Inside the analyzed system:
 - migration execution outcome;
 - blockers, exception handling and recovery;
 - interpretation of evidence received from adjacent support and infrastructure domains;
-- cross-system invariants and final synthesis.
+- cross-system invariants, history/reporting and final synthesis.
 
 Outside the analyzed system but relevant through boundaries:
 
@@ -56,6 +56,7 @@ are cross-system invariants satisfied?
 
 - [`invariants.md`](invariants.md) — properties that every local model and migration path must preserve;
 - [`data-ownership.md`](data-ownership.md) — which responsibility owns each significant fact and why one global `migration_status` is insufficient;
+- [`history-and-reporting.md`](history-and-reporting.md) — cross-owner migration history, operational views and consistency questions;
 - [`legacy-knowledge-map.md`](legacy-knowledge-map.md) — temporary migration map from artifact-oriented legacy files to canonical SSAD owners.
 
 ## Core distinctions
@@ -72,6 +73,9 @@ Evidence provider
 
 Blocker record
 != ownership of underlying technical problem
+
+Reporting status
+!= canonical domain state
 
 Technical projection
 != historical production architecture
@@ -97,7 +101,7 @@ Technical projections must not become canonical owners of business meaning.
 
 ## Related areas
 
-- [`workplace/`](../workplace/) — workplace environment meaning and operational state;
+- [`workplace/`](../workplace/) — workplace environment meaning, profiles and operational state;
 - [`readiness/`](../readiness/) — readiness evaluation and dependency evidence;
 - [`planning/`](../planning/) — schedule, migration waves and postponement;
 - [`execution/`](../execution/) — automated/manual migration attempts;

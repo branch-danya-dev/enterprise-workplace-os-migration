@@ -20,7 +20,11 @@ sql/
 → legacy top-level files removed
 
 diagrams/
-→ presentation validation / relocation pending
+→ visual meaning redistributed to canonical owners
+→ generated SVG / centralized diagram tree removed
+
+tools/plantuml.jar
+→ removed with obsolete rendering workflow
 ```
 
 Historical files remain available through Git history.
@@ -53,36 +57,11 @@ legacy artifact
 
 ## Technical projection migration
 
-The legacy API and SQL artifacts were useful, but they reintroduced the old flattened migration model.
+The former API and SQL layers were useful portfolio artifacts, but they reintroduced the flattened migration model through a broad `migrationStatus` and persistence fields such as `workplaces.migration_status` and `migration_schedule.readiness_status`.
 
-### Legacy API issue
+They were replaced by the owner-aware projection under [`../technical-projection/`](../technical-projection/).
 
-The old API exposed one `migrationStatus` containing values from several different owners:
-
-```text
-scheduled
-ready
-postponed
-blocked
-migration_in_progress
-manual_migration_required
-dual_boot
-migrated
-```
-
-It also accepted `readinessStatus` as part of `MigrationSchedule`.
-
-After the SSAD domain migration, both patterns became invalid projections.
-
-### API correction
-
-The new API lives in:
-
-```text
-technical-projection/api/
-```
-
-It separates:
+The active representation separates:
 
 ```text
 Workplace environment
@@ -96,54 +75,49 @@ Operational validation
 Derived operational read model
 ```
 
-Important behavior changes include:
+A derived `workplace_operational_view` may join those facts for reporting without becoming their canonical owner.
+
+## Visual migration
+
+The old `diagrams/` tree mixed several kinds of visual representation and could itself imply the wrong model.
+
+### Old global state machine
+
+`workplace-state-machine.puml` treated these as one lifecycle:
 
 ```text
-PATCH arbitrary status
-→ replaced by explicit owner-specific operations
-
-schedule.readinessStatus
-→ removed
-
-successful migration attempt
-→ does not automatically mean operational completion
-
-blocker resolved
-→ allows readiness re-evaluation; does not force GREEN
+Scheduled
+Ready
+Postponed
+Blocked
+Migration In Progress
+Manual Migration Required
+Dual Boot
+Migrated
+Fully Operational
 ```
 
-### Legacy SQL issue
+SSAD showed that these values belong to different responsibility dimensions. The replacement [`../workplace/visual-model.md`](../workplace/visual-model.md) therefore contains only workplace-environment states.
 
-The old schema contained:
+### Old conceptual data model
 
-```text
-workplaces.migration_status
-migration_schedule.readiness_status
-```
+`migration-data-model.puml` visually encoded `migration_status` on Workplace and `readiness_status` on MigrationSchedule. It was retired after the ownership-aware data projection was established under [`../technical-projection/data/`](../technical-projection/data/).
 
-These columns made persistence look like the semantic owner of several unrelated dimensions.
+### Old process / sequence diagrams
 
-### SQL correction
+The old migration, manual-recovery and postponement diagrams contained useful scenario knowledge but coupled it to the obsolete flattened status/API model.
 
-The normalized projection now lives in:
+Their useful meaning was rebuilt as local Mermaid models:
 
-```text
-technical-projection/data/
-```
+- [`visual-models.md`](visual-models.md) — responsibility map and end-to-end synthesis;
+- [`../workplace/visual-model.md`](../workplace/visual-model.md) — environment states;
+- [`../readiness/visual-model.md`](../readiness/visual-model.md) — readiness evidence/decision;
+- [`../planning/visual-model.md`](../planning/visual-model.md) — postponement and schedule lifecycle;
+- [`../exceptions/visual-model.md`](../exceptions/visual-model.md) — manual recovery and blocker lifecycle;
+- [`../integrations/visual-model.md`](../integrations/visual-model.md) — cross-boundary evidence/commands;
+- [`../technical-projection/visual-model.md`](../technical-projection/visual-model.md) — persistence/API/read-model projection.
 
-The main ownership split is:
-
-| Stored representation | Meaning owner |
-|---|---|
-| `workplaces.environment_state` | Workplace |
-| `readiness_evaluations` | Readiness |
-| `migration_schedules` | Planning |
-| `migration_attempts` | Execution |
-| `migration_blockers` | Exceptions |
-| `compatibility_assessments` | External/specialized evidence consumed by Readiness |
-| `operational_validations` | Workplace/System completion verification |
-
-A derived `workplace_operational_view` joins these facts for convenience without becoming their canonical owner.
+Generated SVGs and the bundled PlantUML renderer were removed. GitHub renders the Mermaid source directly beside canonical knowledge.
 
 ## Legacy IDs after migration
 
@@ -161,25 +135,14 @@ Exceptions opens recovery path
 
 They preserve evidence of coverage but no longer define repository navigation.
 
-## Remaining artifact-oriented source
+## Structural migration completion
 
-### `diagrams/`
+The repository now satisfies the migration target:
 
-Visual artifacts remain useful, but each diagram must be checked against the current model.
-
-The legacy global workplace state machine is especially important: it now represents a flattened operational/process projection rather than canonical workplace state semantics.
-
-The next pass should either:
-
-- redraw it into several owner-specific diagrams;
-- replace it with a cross-system synthesis diagram;
-- or clearly label any retained flattened diagram as a derived view.
-
-## Completion criterion
-
-The structural migration is complete when:
-
-1. canonical domain knowledge lives only under responsibility owners;
+1. canonical domain knowledge lives under responsibility owners;
 2. technical projections explicitly depend on canonical knowledge rather than redefine it;
-3. presentation artifacts accurately visualize the current model;
-4. no artifact-oriented legacy tree competes with active knowledge.
+3. visual models live beside the knowledge they represent;
+4. no artifact-oriented `docs/`, `api/`, `sql/` or `diagrams/` tree competes with active knowledge;
+5. historical versions remain available through Git history.
+
+Further work should be driven by new evidence, review findings or real use of the case — not by preserving the legacy artifact taxonomy.

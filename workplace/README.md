@@ -8,13 +8,15 @@ A workplace is not only an operating-system installation. It is the user's usabl
 
 - What is a workplace in this case?
 - Which facts describe the workplace environment itself?
+- Which workplace profiles/dependencies explain migration variability?
 - Which operational states are stable or transitional?
 - What does operational migration completion mean?
 - Which apparent “statuses” actually belong to readiness, planning, execution or exceptions?
 
-## Canonical document
+## Canonical documents
 
-→ [`states.md`](states.md) defines workplace state semantics and decomposes the legacy one-dimensional `migration_status` into separate responsibility dimensions.
+- [`profiles-and-dependencies.md`](profiles-and-dependencies.md) — AS-IS workplace profiles and environment dependencies;
+- [`states.md`](states.md) — workplace state semantics and decomposition of the legacy one-dimensional `migration_status`.
 
 ## Core idea
 
@@ -53,7 +55,7 @@ The cross-system conditions for that claim are owned by [`../system/invariants.m
 
 ## Ownership boundary
 
-This area owns workplace-environment and operational-state meaning.
+This area owns workplace-environment, profile/context and operational-state meaning.
 
 It does **not** own:
 

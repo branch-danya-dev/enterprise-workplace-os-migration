@@ -9,7 +9,8 @@ Readiness is not identical to a single team's approval and not identical to one 
 ## Canonical documents
 
 - [`evidence-model.md`](evidence-model.md) — what evidence contributes to readiness, who provides it and why compatibility is more than a boolean;
-- [`decision-model.md`](decision-model.md) — `GREEN / YELLOW / RED` semantics, gating logic and revalidation triggers.
+- [`decision-model.md`](decision-model.md) — `GREEN / YELLOW / RED` semantics, gating logic and revalidation triggers;
+- [`visual-model.md`](visual-model.md) — evidence-source and readiness re-evaluation diagrams.
 
 ## Core model
 

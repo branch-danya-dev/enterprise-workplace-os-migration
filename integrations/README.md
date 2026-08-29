@@ -4,9 +4,10 @@ This area describes interactions across ownership boundaries that influence migr
 
 It does not re-document the internals of adjacent corporate systems.
 
-## Canonical document
+## Canonical documents
 
-→ [`boundary-contracts.md`](boundary-contracts.md) defines the migration meaning crossing Service Desk, automation tooling, notification, software support, Information Security/access, infrastructure and vendor/development boundaries.
+- [`boundary-contracts.md`](boundary-contracts.md) — migration meaning crossing Service Desk, automation tooling, notification, software support, Information Security/access, infrastructure and vendor/development boundaries;
+- [`visual-model.md`](visual-model.md) — map of commands, evidence and notifications crossing those ownership boundaries.
 
 ## Interaction vocabulary
 

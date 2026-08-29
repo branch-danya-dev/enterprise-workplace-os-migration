@@ -6,7 +6,7 @@
 ![SSAD](https://img.shields.io/badge/Methodology-SSAD-111111)
 ![OpenAPI](https://img.shields.io/badge/OpenAPI-Projection-6BA539)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Projection-336791)
-![PlantUML](https://img.shields.io/badge/PlantUML-Diagrams-8A2BE2)
+![Mermaid](https://img.shields.io/badge/Mermaid-Visual%20Models-FF3670)
 
 ---
 
@@ -42,18 +42,7 @@ Operationally migrated workplace
 
 This system is materially different from a conventional software product.
 
-There is no single application boundary containing all behavior. The migration depends on:
-
-- heterogeneous employee workplaces;
-- software/functionality compatibility;
-- corporate access and security constraints;
-- migration automation;
-- Service Desk coordination;
-- multiple independent support domains;
-- migration waves and postponements;
-- blockers and vendor remediation;
-- manual recovery;
-- transitional dual-boot states.
+There is no single application boundary containing all behavior. The migration depends on heterogeneous workplaces, software/functionality compatibility, corporate access and security constraints, migration automation, Service Desk coordination, independent support domains, migration waves, postponements, blockers, vendor remediation, manual recovery and transitional dual-boot states.
 
 The central analytical question is:
 
@@ -86,15 +75,12 @@ integrations/
 ├─ Service Desk, tooling, notifications and specialized support boundaries
 │
 technical-projection/
-├─ synthetic REST / OpenAPI / PostgreSQL representation
-│
-diagrams/
-└─ presentation artifacts pending final validation
+└─ synthetic REST / OpenAPI / PostgreSQL representation
 ```
 
 Start with [`system/`](system/README.md).
 
-The former artifact-oriented `docs/`, `api/` and `sql/` trees have been decomposed or redesigned and removed from the active root. Historical versions remain available in Git history.
+The former artifact-oriented `docs/`, `api/`, `sql/` and `diagrams/` trees have been decomposed, redesigned or retired. Historical versions remain available in Git history.
 
 ---
 
@@ -117,32 +103,24 @@ flowchart TD
     I --> F
 ```
 
-| Area | Canonical question |
-|---|---|
-| [`workplace/`](workplace/README.md) | What working environment exists and is it operational? |
-| [`readiness/`](readiness/README.md) | May normal migration safely proceed now? |
-| [`planning/`](planning/README.md) | When is migration intended to happen? |
-| [`execution/`](execution/README.md) | What actually happened during an attempt? |
-| [`exceptions/`](exceptions/README.md) | What condition changes the normal path and how is recovery handled? |
-| [`integrations/`](integrations/README.md) | What evidence/capabilities cross external ownership boundaries? |
+| Area | Canonical question | Visual model |
+|---|---|---|
+| [`workplace/`](workplace/README.md) | What working environment exists and is it operational? | [`visual`](workplace/visual-model.md) |
+| [`readiness/`](readiness/README.md) | May normal migration safely proceed now? | [`visual`](readiness/visual-model.md) |
+| [`planning/`](planning/README.md) | When is migration intended to happen? | [`visual`](planning/visual-model.md) |
+| [`execution/`](execution/README.md) | What actually happened during an attempt? | cross-system flow |
+| [`exceptions/`](exceptions/README.md) | What condition changes the normal path and how is recovery handled? | [`visual`](exceptions/visual-model.md) |
+| [`integrations/`](integrations/README.md) | What evidence/capabilities cross external ownership boundaries? | [`visual`](integrations/visual-model.md) |
+
+Cross-system synthesis: [`system/visual-models.md`](system/visual-models.md).
 
 ---
 
 ## The old global status was decomposed
 
-The original portfolio model used one broad `migration_status` vocabulary containing values such as:
+The original portfolio model used one broad `migration_status` vocabulary containing values such as `Scheduled`, `Ready`, `Blocked`, `Migration In Progress`, `Manual Migration Required`, `Dual Boot` and `Migrated`.
 
-```text
-Scheduled
-Ready
-Blocked
-Migration In Progress
-Manual Migration Required
-Dual Boot
-Migrated
-```
-
-SSAD exposed that these do not belong to one responsibility.
+SSAD exposed that these belong to different responsibility dimensions:
 
 ```text
 Workplace environment
@@ -163,7 +141,7 @@ Exception = Missing critical software
 
 without inventing one giant state machine.
 
-See [`workplace/states.md`](workplace/states.md) and [`system/data-ownership.md`](system/data-ownership.md).
+See [`workplace/states.md`](workplace/states.md), [`workplace/visual-model.md`](workplace/visual-model.md) and [`system/data-ownership.md`](system/data-ownership.md).
 
 ---
 
@@ -198,27 +176,11 @@ technical projection
 
 ## Readiness is a decision over evidence
 
-```text
-Business capability required
-        ↓
-Software / functionality evidence
-        ↓
-Access / security evidence
-        ↓
-Infrastructure / tooling evidence
-        ↓
-Known blockers
-        ↓
-Cross-team evidence
-        ↓
-GREEN / YELLOW / RED
-```
-
-`GREEN / YELLOW / RED` is a time-sensitive evaluation, not an immutable workplace property.
+`GREEN / YELLOW / RED` is a time-sensitive evaluation over business capability, software/functionality, access/security, infrastructure/tooling and blocker evidence. It is not an immutable workplace property.
 
 > **Evidence is distributed. System meaning must still be explicit.**
 
-See [`readiness/evidence-model.md`](readiness/evidence-model.md) and [`readiness/decision-model.md`](readiness/decision-model.md).
+See [`readiness/evidence-model.md`](readiness/evidence-model.md), [`readiness/decision-model.md`](readiness/decision-model.md) and [`readiness/visual-model.md`](readiness/visual-model.md).
 
 ---
 
@@ -252,13 +214,11 @@ REST / OpenAPI / PostgreSQL
 
 ### API
 
-[`technical-projection/api/`](technical-projection/api/README.md) demonstrates an ownership-aware REST projection.
-
-Key corrections from the former API:
+[`technical-projection/api/`](technical-projection/api/README.md) demonstrates an ownership-aware REST projection:
 
 - no one global `migrationStatus`;
 - schedule requests do not contain `readinessStatus`;
-- reschedule / postponement / blocker resolution are explicit operations rather than arbitrary status PATCHes;
+- owner-specific operations replace arbitrary status PATCHes;
 - external tooling reports attempt facts rather than directly setting workplace meaning;
 - technical success requires separate operational validation;
 - `operational-view` is explicitly a derived read model.
@@ -267,56 +227,42 @@ Machine-readable contract: [`technical-projection/api/openapi.yaml`](technical-p
 
 ### Data
 
-[`technical-projection/data/`](technical-projection/data/README.md) demonstrates a normalized PostgreSQL projection.
+[`technical-projection/data/`](technical-projection/data/README.md) demonstrates a PostgreSQL projection where workplace environment, readiness evaluations, schedules, attempts, blockers and operational validations remain separate facts even when persisted in one database.
 
-Key separation:
+The derived `workplace_operational_view` supports reporting without becoming a semantic owner.
 
-```text
-workplaces.environment_state
-→ Workplace
-
-readiness_evaluations
-→ Readiness
-
-migration_schedules
-→ Planning
-
-migration_attempts
-→ Execution
-
-migration_blockers
-→ Exceptions
-
-operational_validations
-→ completion verification
-```
-
-The database also exposes a derived `workplace_operational_view` for operational reporting without turning that joined representation into a semantic owner.
-
-Files:
-
-- [`schema.sql`](technical-projection/data/schema.sql)
-- [`sample-data.sql`](technical-projection/data/sample-data.sql)
-- [`analysis-queries.sql`](technical-projection/data/analysis-queries.sql)
+Visual projection: [`technical-projection/visual-model.md`](technical-projection/visual-model.md).
 
 ---
 
 ## External boundaries
 
-Relevant adjacent systems and teams include:
-
-- Service Desk;
-- automated migration tooling;
-- notification services;
-- Information Security / access domains;
-- Infrastructure Automation;
-- Software / Office Applications Support;
-- Telephony and other specialized support domains;
-- vendor/development teams.
+Relevant adjacent systems and teams include Service Desk, automated migration tooling, notification services, Information Security/access domains, Infrastructure Automation, Software / Office Applications Support, Telephony and other specialized support domains, and vendor/development teams.
 
 The migration model consumes evidence and capabilities from these domains without claiming ownership of their internals.
 
-See [`integrations/boundary-contracts.md`](integrations/boundary-contracts.md).
+See [`integrations/boundary-contracts.md`](integrations/boundary-contracts.md) and [`integrations/visual-model.md`](integrations/visual-model.md).
+
+---
+
+## Visual models are local knowledge projections
+
+The repository no longer has a centralized `diagrams/` artifact tree.
+
+Visual models are Mermaid diagrams stored beside the knowledge they explain. This prevents stale rendered SVGs and keeps each diagram subordinate to the same canonical owner as the underlying meaning.
+
+```text
+canonical knowledge
+        ↓
+local visual representation
+```
+
+not:
+
+```text
+diagram folder
+→ accidental second source of truth
+```
 
 ---
 
@@ -325,14 +271,6 @@ See [`integrations/boundary-contracts.md`](integrations/boundary-contracts.md).
 Legacy `BR-*`, `FR-*`, `NFR-*` and `AC-*` identifiers remain in canonical documents as historical traceability anchors, not as repository architecture.
 
 The migration audit is documented in [`system/legacy-knowledge-map.md`](system/legacy-knowledge-map.md).
-
----
-
-## Remaining pass: diagrams
-
-[`diagrams/`](diagrams/) is now the only remaining artifact-oriented area.
-
-The visuals still need to be validated against the current model. In particular, the old global workplace state machine should no longer be presented as canonical because SSAD decomposed it into several responsibility dimensions.
 
 ---
 

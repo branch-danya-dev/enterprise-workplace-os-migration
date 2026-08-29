@@ -16,7 +16,8 @@ A workplace is not only an operating-system installation. It is the user's usabl
 ## Canonical documents
 
 - [`profiles-and-dependencies.md`](profiles-and-dependencies.md) — AS-IS workplace profiles and environment dependencies;
-- [`states.md`](states.md) — workplace state semantics and decomposition of the legacy one-dimensional `migration_status`.
+- [`states.md`](states.md) — workplace state semantics and decomposition of the legacy one-dimensional `migration_status`;
+- [`visual-model.md`](visual-model.md) — Mermaid state model containing only workplace-owned environment states.
 
 ## Core idea
 

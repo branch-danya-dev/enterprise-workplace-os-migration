@@ -2,68 +2,57 @@
 
 This area owns deviations from the normal migration path that require explicit coordination, remediation or recovery.
 
-## Exception classes
+## Canonical document
 
-Typical exceptions include:
+→ [`blockers-and-recovery.md`](blockers-and-recovery.md) defines blocker semantics, impact scope, remediation strategies, vendor adaptation, manual recovery, dual-boot transition and closure rules.
 
-- incompatible or missing software;
-- unacceptable replacement functionality;
-- unresolved access/security constraint;
-- infrastructure dependency;
-- automation failure requiring manual migration;
-- peripheral/driver incompatibility;
-- business-critical postponement reason;
-- unresolved cross-team dependency.
+## Core principle
 
-## Blocker semantics
+A blocker is not merely an error message or ticket.
 
-A blocker is not merely an error message.
-
-It means:
-
-> **The normal migration path must not continue until the blocking condition is resolved, accepted or moved into an explicit transition strategy.**
+> **It is evidence that the normal migration path must not continue until the condition is resolved, accepted or transformed into an explicit transition strategy.**
 
 ```text
-Blocker discovered
-      ↓
-Register evidence
-      ↓
-Identify responsible domain
-      ↓
-Choose response
-   ├─ remediation
-   ├─ postpone / later wave
-   ├─ dual boot transition
-   ├─ vendor adaptation
-   └─ manual recovery
-      ↓
-Revalidate readiness
-      ↓
-Return to migration path
+blocker / failed normal path
+        ↓
+identify affected scope
+        ↓
+coordinate responsible domain
+        ↓
+remediate / recover / transition
+        ↓
+update evidence
+        ↓
+revalidate readiness
 ```
 
-## Manual recovery
+## Two ownership levels
 
-A failed automated attempt can produce a manual-recovery requirement.
-
-The failure itself belongs to [`execution/`](../execution/). This area owns the exception path that follows: handoff, coordination, recovery and return to a valid workplace state.
-
-## Blockers and ownership
-
-The migration process may own the blocker record without owning the underlying technical problem.
-
-Examples:
+The migration case may own the **blocker record and migration impact** without owning the underlying problem.
 
 ```text
-missing office-software capability
-→ owned for remediation by software/vendor domain
+underlying software/security/infrastructure problem
+→ specialized domain
 
-migration blocker record
-→ owned by migration exception process
+migration blocker and its effect on the programme
+→ Exceptions
 ```
 
-This distinction allows the migration model to track impact without pretending to own every adjacent system.
+## Failure boundary
 
-## Completion
+A failed migration attempt is first an [`execution/`](../execution/) fact.
 
-An exception is closed only when its impact on migration is resolved or explicitly transformed into another accepted path and readiness is re-evaluated.
+This area owns the consequence:
+
+- manual-recovery case;
+- remediation coordination;
+- exception state;
+- return to readiness or another accepted path.
+
+## Ownership boundary
+
+Exceptions owns migration-impact/recovery semantics.
+
+It does not absorb the internals of software, security, infrastructure, vendor or Service Desk domains.
+
+Cross-boundary interactions are described in [`integrations/`](../integrations/).

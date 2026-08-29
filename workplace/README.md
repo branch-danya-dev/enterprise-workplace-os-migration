@@ -7,56 +7,61 @@ A workplace is not only an operating-system installation. It is the user's usabl
 ## Canonical questions
 
 - What is a workplace in this case?
-- Which migration state is it currently in?
-- Which states are transitional and which are stable?
-- What does `migrated` mean compared with `fully operational`?
-- Which facts describe the workplace itself and which belong to readiness, planning or execution?
+- Which facts describe the workplace environment itself?
+- Which workplace profiles/dependencies explain migration variability?
+- Which operational states are stable or transitional?
+- What does operational migration completion mean?
+- Which apparent “statuses” actually belong to readiness, planning, execution or exceptions?
 
-## State semantics
+## Canonical documents
 
-The reconstructed lifecycle is:
+- [`profiles-and-dependencies.md`](profiles-and-dependencies.md) — AS-IS workplace profiles and environment dependencies;
+- [`states.md`](states.md) — workplace state semantics and decomposition of the legacy one-dimensional `migration_status`.
 
-```text
-Scheduled
-   ├─> Postponed
-   ├─> Blocked
-   └─> Ready
-          ↓
-   Migration In Progress
-      ├─> Manual Migration Required
-      ├─> Dual Boot
-      └─> Migrated
-               ↓
-        Fully Operational
-```
+## Core idea
 
-The exact transition rules remain derived from the existing state model during migration of the legacy documentation.
+The workplace state answers:
 
-## Important distinctions
+> **What environment exists now, and can it support the required business activity?**
+
+It does not answer every migration-process question.
 
 ```text
-planned date
-!= workplace state
-
-migration attempt
-!= workplace state
-
-Astra installed
-!= fully operational workplace
-
-dual boot
-!= completed migration
+Workplace state
+!= Readiness state
+!= Planning state
+!= Execution state
+!= Exception state
 ```
+
+For example, a workplace may simultaneously be:
+
+```text
+Environment = Windows Operational
+Readiness = RED
+Planning = Postponed
+Exception = Missing critical software
+```
+
+This is more precise than forcing those facts into one global status value.
+
+## Final target meaning
+
+The stable target is not “Astra installed.”
+
+It is an **Astra Operational** workplace where the agreed business activity can continue with required software, services and access.
+
+The cross-system conditions for that claim are owned by [`../system/invariants.md`](../system/invariants.md).
 
 ## Ownership boundary
 
-This area owns workplace-state meaning.
+This area owns workplace-environment, profile/context and operational-state meaning.
 
 It does **not** own:
 
-- whether dependencies are sufficient for migration — see [`readiness/`](../readiness/);
-- migration date or postponement — see [`planning/`](../planning/);
-- execution-attempt details — see [`execution/`](../execution/);
-- blocker resolution workflow — see [`exceptions/`](../exceptions/).
+- whether dependencies are sufficient for migration — [`readiness/`](../readiness/);
+- migration date or postponement — [`planning/`](../planning/);
+- execution-attempt details — [`execution/`](../execution/);
+- blocker resolution/recovery workflow — [`exceptions/`](../exceptions/).
 
 This separation prevents a status field in a hypothetical API or database from becoming the accidental definition of the domain state.

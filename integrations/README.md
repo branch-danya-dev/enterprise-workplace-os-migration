@@ -1,56 +1,52 @@
 # Integrations and External Boundaries
 
-This area describes interactions across ownership boundaries that influence migration state, readiness, planning or execution.
+This area describes interactions across ownership boundaries that influence migration state, readiness, planning, execution or recovery.
 
 It does not re-document the internals of adjacent corporate systems.
 
-## Main external actors and systems
+## Canonical document
 
-### Service Desk
+→ [`boundary-contracts.md`](boundary-contracts.md) defines the migration meaning crossing Service Desk, automation tooling, notification, software support, Information Security/access, infrastructure and vendor/development boundaries.
 
-Provides the formal channel for postponement requests, stop-factor registration and coordination records.
-
-Canonical migration meaning remains in the migration model; Service Desk supplies workflow evidence and coordination artifacts.
-
-### Automated Migration Tooling
-
-Performs the automated technical migration procedure and reports attempt outcomes.
+## Interaction vocabulary
 
 ```text
-migration tool result
-→ execution evidence
-→ migration model decides resulting domain transition
+COMMAND
+→ asks another domain to perform something
+
+EVIDENCE
+→ reports a fact or constraint for migration interpretation
+
+NOTIFICATION
+→ communicates an already-owned migration fact
 ```
 
-The tooling does not own arbitrary workplace lifecycle state.
+The distinction matters because transport does not determine authority.
 
-### Notification Service
+## Main boundaries
 
-Delivers user-facing migration-date and rescheduling notifications.
-
-It owns delivery behavior, not the canonical migration schedule.
-
-### Specialized Support Domains
-
-Examples include Information Security, Software/Office Applications Support, Infrastructure Automation, Telephony and other specialized support teams.
-
-They provide authoritative evidence about their own areas. Migration readiness consumes that evidence without absorbing ownership of those systems.
-
-## Cross-boundary contract questions
-
-For every integration, analyze:
-
-```text
-What fact crosses the boundary?
-Who owns that fact?
-Who consumes it?
-Is the interaction a command, evidence or notification?
-What happens if it is late, duplicated or unavailable?
-How is the result reconciled with migration state?
-```
+- **Service Desk** — formal postponement/stop-factor coordination evidence;
+- **Automated Migration Tooling** — technical attempt capability and result evidence;
+- **Notification Service** — delivery of planning-owned dates/messages;
+- **Software / Office Applications Support** — compatibility and functionality evidence;
+- **Information Security / access domains** — security/access constraints and approvals;
+- **Infrastructure Automation** — tooling/infrastructure capability and attempt evidence;
+- **specialized support domains** — domain-specific evidence when it affects workplace capability;
+- **vendor/development teams** — remediation outcomes for missing target functionality.
 
 ## Core principle
 
 > **External systems report facts or provide capabilities. Internal migration meaning remains with the relevant migration responsibility owner.**
 
-This principle is especially important in the portfolio API projection, where transport operations must not redefine the real domain model.
+For every boundary ask:
+
+```text
+What crosses the boundary?
+Who owns that fact?
+Who consumes it?
+Is it command, evidence or notification?
+What if it is stale, duplicated or unavailable?
+How is it reconciled with current migration knowledge?
+```
+
+Where the sanitized reconstruction cannot support an answer, the gap should be explicit rather than replaced with invented production behavior.

@@ -2,57 +2,57 @@
 
 This area owns the fact of **what actually happened when migration was attempted**.
 
-Execution is intentionally separate from planning and workplace state.
+Execution is intentionally separate from planning, readiness and final workplace state.
 
-## Canonical facts
+## Canonical document
 
-- execution method: automated or manual;
-- attempt start and completion;
-- technical outcome;
-- failure evidence;
-- recovery handoff when automation cannot complete the migration;
-- link from an attempt to the resulting workplace-state transition.
+→ [`attempt-model.md`](attempt-model.md) defines automated/manual attempt semantics, success/failure evidence, history and the handoff to recovery.
 
-## Default path
+## Core model
 
 ```text
-Active schedule
-      ↓
-Readiness confirmed
-      ↓
-Automated migration attempt
-      ↓
-Success?
-   ├─ Yes → workplace moves toward migrated / operational validation
-   └─ No  → failure recorded
-             ↓
-          manual recovery required
+active plan
++
+current readiness permits migration
+        ↓
+ATTEMPT
+        ↓
+technical result
+   ├─ success → operational validation continues
+   └─ failure → exception / recovery path opens
 ```
 
-Automated migration is the default path. Manual migration is an exception/recovery mechanism rather than an equivalent planning mode.
+Automated migration is the default path for standard eligible cases. Manual activity is primarily a recovery/exception mechanism.
 
 ## Execution does not own business completion
 
-A technical tool can report:
+A migration tool or support engineer can provide technical evidence such as:
 
 ```text
 installation completed
 backup restored
 script failed
-migration attempt failed
+manual activity completed
 ```
 
-But the tool does not own the final statement:
+But the attempt does not itself own the final statement:
 
 ```text
 workplace is operationally migrated
 ```
 
-That meaning depends on workplace state, readiness evidence and operational validation.
+That meaning depends on the workplace environment and cross-system invariants.
 
 ## Ownership boundary
 
-Execution owns **attempt facts**.
+Execution owns:
+
+- attempt identity/history;
+- execution method;
+- start/completion facts;
+- technical result;
+- technical failure evidence;
+- handoff trigger to recovery.
 
 It does not own:
 

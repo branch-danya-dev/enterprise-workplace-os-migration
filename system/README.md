@@ -8,12 +8,13 @@ The case is not modeled as an operating-system installer. It is modeled as a con
 
 Inside the analyzed system:
 
-- workplace migration state;
+- workplace migration/operational meaning;
 - migration readiness decision;
 - migration planning and postponement;
 - migration execution outcome;
 - blockers, exception handling and recovery;
-- evidence received from adjacent support and infrastructure domains.
+- interpretation of evidence received from adjacent support and infrastructure domains;
+- cross-system invariants, history/reporting and final synthesis.
 
 Outside the analyzed system but relevant through boundaries:
 
@@ -31,7 +32,7 @@ These external domains provide evidence, capabilities or constraints. Their inte
 
 ```text
 WORKPLACE
-what operational state is the workplace in?
+what environment exists and is it operational?
         ↓
 READINESS
 can this workplace be migrated safely now?
@@ -46,20 +47,41 @@ EXCEPTIONS
 what blocks normal progress and how is recovery handled?
         ↓
 SYSTEM SYNTHESIS
-is the workplace operationally migrated?
+are cross-system invariants satisfied?
 ```
 
-`integrations/` describes cross-boundary interactions that provide evidence or trigger operations across these responsibilities.
+`integrations/` describes cross-boundary interactions that provide evidence, capabilities or notifications across these responsibilities.
 
-## Core invariants
+## Canonical system documents
 
-1. Installing Astra Linux does not by itself mean that a workplace is operationally migrated.
-2. Migration readiness depends on the workplace's required business capability, not only operating-system compatibility.
-3. A planned migration and an actual migration attempt are different facts.
-4. External systems may report evidence, but they do not arbitrarily mutate internal migration meaning.
-5. A blocker delays or changes the migration path; it does not erase the workplace from the migration programme.
-6. Dual boot is a transitional state, not equivalent to final operational migration.
-7. A migration is complete only when the agreed business workflow can continue in the target workplace environment.
+- [`invariants.md`](invariants.md) — properties that every local model and migration path must preserve;
+- [`data-ownership.md`](data-ownership.md) — which responsibility owns each significant fact and why one global `migration_status` is insufficient;
+- [`history-and-reporting.md`](history-and-reporting.md) — cross-owner migration history, operational views and consistency questions;
+- [`legacy-knowledge-map.md`](legacy-knowledge-map.md) — temporary migration map from artifact-oriented legacy files to canonical SSAD owners.
+
+## Core distinctions
+
+```text
+Astra installed
+!= operationally migrated
+
+MigrationSchedule
+!= MigrationAttempt
+
+Evidence provider
+!= final migration authority
+
+Blocker record
+!= ownership of underlying technical problem
+
+Reporting status
+!= canonical domain state
+
+Technical projection
+!= historical production architecture
+```
+
+The detailed definitions and verification conditions live in the canonical documents above and in the local responsibility areas.
 
 ## Evidence status
 
@@ -79,7 +101,7 @@ Technical projections must not become canonical owners of business meaning.
 
 ## Related areas
 
-- [`workplace/`](../workplace/) — workplace meaning and operational state;
+- [`workplace/`](../workplace/) — workplace environment meaning, profiles and operational state;
 - [`readiness/`](../readiness/) — readiness evaluation and dependency evidence;
 - [`planning/`](../planning/) — schedule, migration waves and postponement;
 - [`execution/`](../execution/) — automated/manual migration attempts;

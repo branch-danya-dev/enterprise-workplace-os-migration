@@ -2,9 +2,10 @@
 
 This area owns deviations from the normal migration path that require explicit coordination, remediation or recovery.
 
-## Canonical document
+## Canonical documents
 
-→ [`blockers-and-recovery.md`](blockers-and-recovery.md) defines blocker semantics, impact scope, remediation strategies, vendor adaptation, manual recovery, dual-boot transition and closure rules.
+- [`blockers-and-recovery.md`](blockers-and-recovery.md) — blocker semantics, impact scope, remediation strategies, vendor adaptation, manual recovery, dual-boot transition and closure rules;
+- [`visual-model.md`](visual-model.md) — manual-recovery sequence, blocker lifecycle and return-to-readiness loop.
 
 ## Core principle
 

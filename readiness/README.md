@@ -6,77 +6,48 @@ This area owns the canonical decision:
 
 Readiness is not identical to a single team's approval and not identical to one compatibility flag. It is an aggregate system decision based on evidence from multiple responsibility domains.
 
-## Evidence used by readiness
+## Canonical documents
 
-Typical evidence includes:
+- [`evidence-model.md`](evidence-model.md) — what evidence contributes to readiness, who provides it and why compatibility is more than a boolean;
+- [`decision-model.md`](decision-model.md) — `GREEN / YELLOW / RED` semantics, gating logic and revalidation triggers.
 
-- required business activity;
-- required workplace software;
-- availability and adequacy of Astra Linux replacements;
-- application-specific compatibility gaps such as macros or extensions;
-- access and security requirements;
-- infrastructure dependencies;
-- hardware/peripheral compatibility where relevant;
-- unresolved migration blockers;
-- evidence from specialized support teams.
+## Core model
 
-## Evidence is not authority
+```text
+Business capability
++
+software / functionality evidence
++
+access / security evidence
++
+infrastructure / tooling evidence
++
+workplace evidence
++
+open blocker evidence
+        ↓
+READINESS DECISION
+        ↓
+GREEN / YELLOW / RED
+```
 
 Multiple teams can provide authoritative evidence about their own domain without owning the final migration-readiness meaning.
 
-```text
-Software Support
-→ compatibility evidence
+> **Distributed validation does not require distributed meaning.**
 
-Information Security
-→ security/access constraints
+## Readiness is time-sensitive
 
-Infrastructure Automation
-→ tooling/infrastructure readiness evidence
-
-Workplace Support
-→ workplace and operational evidence
-
-Migration readiness
-→ aggregate decision used by the migration process
-```
-
-This is a central SSAD distinction for this case: **distributed validation does not require distributed meaning**.
-
-## Readiness outcomes
-
-The historical operational model used a simple status vocabulary:
+A previous decision can become stale when evidence changes.
 
 ```text
-GREEN
-→ ready to proceed
-
-YELLOW
-→ unresolved question / coordination required
-
-RED
-→ confirmed blocker; migration must not proceed normally
+previous readiness
++
+new evidence
+→ reopen decision
+→ revalidate
 ```
 
-These labels are presentation-level indicators. Canonical readiness meaning is the underlying decision and its evidence.
-
-## Readiness logic
-
-```text
-Required business capability known?
-        ↓
-Required dependencies identified?
-        ↓
-Software acceptable?
-        ↓
-Access / infrastructure acceptable?
-        ↓
-No unresolved blocker?
-        ↓
-READY
-```
-
-A negative answer does not necessarily terminate the programme. It may produce postponement, remediation, dual boot, vendor adaptation or another exception path.
+This is why readiness should not be treated as an immutable property of a workplace or software record.
 
 ## Ownership boundary
 
@@ -88,3 +59,5 @@ It does not own:
 - actual execution result — [`execution/`](../execution/);
 - blocker remediation — [`exceptions/`](../exceptions/);
 - internal behavior of external support systems — [`integrations/`](../integrations/).
+
+The underlying evidence may remain authoritative in specialized domains even when the migration process stores a projection of it.

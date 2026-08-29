@@ -24,10 +24,11 @@ If a projection contradicts canonical migration meaning, the projection is wrong
 
 ```text
 technical-projection/
+├── README.md
+├── visual-model.md
 ├── api/
 │   ├── README.md
 │   └── openapi.yaml
-│
 └── data/
     ├── README.md
     ├── schema.sql
@@ -35,9 +36,9 @@ technical-projection/
     └── analysis-queries.sql
 ```
 
-The previous top-level `api/` and `sql/` trees were removed after their useful concepts were reworked into this projection.
+[`visual-model.md`](visual-model.md) shows how independently owned facts can share storage and read models without merging semantic ownership.
 
-Historical versions remain available in Git history.
+The previous top-level `api/` and `sql/` trees were removed after their useful concepts were reworked into this projection. Historical versions remain available in Git history.
 
 ## What changed after applying SSAD
 
@@ -179,8 +180,8 @@ Key rules:
 5. compatibility is timestamped evidence, not a permanent boolean;
 6. read views may join owners but should remain clearly derived.
 
-## Remaining presentation pass
+## Presentation rule
 
-The only remaining artifact-oriented area is [`../diagrams/`](../diagrams/).
+Technical diagrams are no longer stored in a separate top-level diagram tree. Visual explanations live beside the knowledge they project, primarily as Mermaid in Markdown.
 
-Those diagrams must now be checked against the canonical model. In particular, the old global workplace state machine should no longer be presented as the canonical domain lifecycle because SSAD decomposed it into workplace, readiness, planning, execution and exception dimensions.
+This keeps presentation subordinate to canonical ownership and makes the repository render correctly on GitHub without generated SVG artifacts or a bundled diagram renderer.

@@ -12,31 +12,31 @@ docs/
 → legacy files removed
 
 api/
-→ technical projection migration pending
+→ technical projection redesigned around canonical owners
+→ legacy top-level files removed
 
 sql/
-→ technical projection migration pending
+→ storage projection redesigned around canonical owners
+→ legacy top-level files removed
 
 diagrams/
 → presentation validation / relocation pending
 ```
 
-The historical `docs/` files remain available through Git history. Active reconstructed system knowledge now lives only in canonical SSAD responsibility areas.
+Historical files remain available through Git history.
 
 ## Migration rule used
 
 ```text
-legacy document
-→ identify individual claims
+legacy artifact
+→ identify individual claims / represented facts
 → assign canonical owner
-→ move/rewrite claim near that owner
-→ keep old IDs only as traceability anchors
-→ remove superseded artifact document
+→ rewrite near that owner or as an explicit projection
+→ preserve only useful traceability
+→ remove superseded artifact tree
 ```
 
-The documents were not moved wholesale because many mixed several responsibility areas.
-
-## Completed domain-document migration
+## Domain-document migration
 
 | Removed legacy source | Knowledge inside it | Canonical destination |
 |---|---|---|
@@ -46,72 +46,140 @@ The documents were not moved wholesale because many mixed several responsibility
 | `docs/04-business-rules.md` | scheduling, postponement, execution, recovery, blockers, completion | split by canonical responsibility owner |
 | `docs/05-functional-requirements.md` | required behavior across migration lifecycle | split by canonical responsibility owner |
 | `docs/06-non-functional-requirements.md` | continuity, recovery, traceability, rollout, supportability | `system/invariants.md`, local constraints, `system/history-and-reporting.md` |
-| `docs/07-acceptance-criteria.md` | verification conditions | colocated with the canonical behavior they verify |
-| `docs/08-requirements-traceability-matrix.md` | BR → FR → NFR → AC artifact traceability | local legacy-ID anchors + owner-based links |
-| `docs/09-migration-data-model.md` | domain concepts mixed with storage-shaped fields | `system/data-ownership.md`, local models, `technical-projection/` |
+| `docs/07-acceptance-criteria.md` | verification conditions | colocated with canonical behavior |
+| `docs/08-requirements-traceability-matrix.md` | BR → FR → NFR → AC artifact traceability | legacy-ID anchors + owner-based links |
+| `docs/09-migration-data-model.md` | domain concepts mixed with storage-shaped fields | `system/data-ownership.md`, local models, `technical-projection/data/` |
 | `docs/10-workplace-state-model.md` | planning/readiness/execution/exception/workplace statuses in one machine | `workplace/states.md` + local responsibility models |
 
-## Business-rule decomposition
+## Technical projection migration
 
-The former `docs/04-business-rules.md` is the clearest example of why artifact-level migration would have failed.
+The legacy API and SQL artifacts were useful, but they reintroduced the old flattened migration model.
 
-| Legacy rule | Canonical owner |
+### Legacy API issue
+
+The old API exposed one `migrationStatus` containing values from several different owners:
+
+```text
+scheduled
+ready
+postponed
+blocked
+migration_in_progress
+manual_migration_required
+dual_boot
+migrated
+```
+
+It also accepted `readinessStatus` as part of `MigrationSchedule`.
+
+After the SSAD domain migration, both patterns became invalid projections.
+
+### API correction
+
+The new API lives in:
+
+```text
+technical-projection/api/
+```
+
+It separates:
+
+```text
+Workplace environment
+Readiness evaluation
+Migration schedule
+Postponement decision
+Migration attempt
+Migration blocker
+Compatibility evidence
+Operational validation
+Derived operational read model
+```
+
+Important behavior changes include:
+
+```text
+PATCH arbitrary status
+→ replaced by explicit owner-specific operations
+
+schedule.readinessStatus
+→ removed
+
+successful migration attempt
+→ does not automatically mean operational completion
+
+blocker resolved
+→ allows readiness re-evaluation; does not force GREEN
+```
+
+### Legacy SQL issue
+
+The old schema contained:
+
+```text
+workplaces.migration_status
+migration_schedule.readiness_status
+```
+
+These columns made persistence look like the semantic owner of several unrelated dimensions.
+
+### SQL correction
+
+The normalized projection now lives in:
+
+```text
+technical-projection/data/
+```
+
+The main ownership split is:
+
+| Stored representation | Meaning owner |
 |---|---|
-| BR-001 — Migration Date Assignment | `planning/` |
-| BR-002 — User Notification | `planning/` + notification boundary |
-| BR-003 — No Postponement Means Migration Proceeds | `planning/` + `readiness/` gating |
-| BR-004 — Postponement Request Channel | `planning/` + Service Desk boundary |
-| BR-005 — Postponement Requires Review | `planning/` |
-| BR-006 — Approved Postponement Requires Rescheduling | `planning/` |
-| BR-007 — Rejected Postponement Keeps Schedule | `planning/` |
-| BR-008 — Automated Migration Default | `execution/` |
-| BR-009 — Technical Failure Triggers Manual Migration | `execution/` → `exceptions/` |
-| BR-010 — Manual Migration by Workplace Support | `exceptions/` recovery |
-| BR-011 — Migration Blocker Must Be Registered | `exceptions/` |
-| BR-012 — Compatibility Affects Priority | `readiness/` + `planning/` |
-| BR-013 — Dual Boot Is Transitional | `workplace/` + `exceptions/` |
-| BR-014 — Completion Requires Operational Workplace | `workplace/` + `system/` invariant |
-| BR-015 — Missing Software May Require Development | `exceptions/` + vendor/development boundary |
-| BR-016 — Readiness Depends on Cross-Team Validation | `readiness/` + `integrations/` |
+| `workplaces.environment_state` | Workplace |
+| `readiness_evaluations` | Readiness |
+| `migration_schedules` | Planning |
+| `migration_attempts` | Execution |
+| `migration_blockers` | Exceptions |
+| `compatibility_assessments` | External/specialized evidence consumed by Readiness |
+| `operational_validations` | Workplace/System completion verification |
+
+A derived `workplace_operational_view` joins these facts for convenience without becoming their canonical owner.
 
 ## Legacy IDs after migration
 
-`BR-*`, `FR-*`, `NFR-*` and `AC-*` identifiers are retained in canonical documents only as **historical traceability anchors**.
-
-They no longer define navigation or knowledge ownership.
+`BR-*`, `FR-*`, `NFR-*` and `AC-*` identifiers remain in canonical documents only as **historical traceability anchors**.
 
 Example:
 
 ```text
 BR-009 / FR-010 / NFR-002 / AC-007
         ↓
-canonical behavior:
 Execution records technical failure
         ↓
 Exceptions opens recovery path
 ```
 
-This preserves evidence of requirement coverage while removing the need to maintain four parallel artifact catalogs.
+They preserve evidence of coverage but no longer define repository navigation.
 
-## Remaining artifact-oriented sources
-
-### `api/`
-
-Hypothetical portfolio REST/OpenAPI representation. It should move under the logic of `technical-projection/` and be corrected where endpoint/status design conflicts with canonical ownership.
-
-### `sql/`
-
-Hypothetical PostgreSQL schema/sample/query layer. It should be treated as storage projection of facts owned by several domains, not as the domain model itself.
+## Remaining artifact-oriented source
 
 ### `diagrams/`
 
-Visual artifacts remain useful, but each diagram must be checked against the new canonical model. The legacy workplace state machine in particular now represents a flattened process/status projection rather than the canonical workplace-owned state semantics.
+Visual artifacts remain useful, but each diagram must be checked against the current model.
 
-## Final removal criterion for remaining legacy areas
+The legacy global workplace state machine is especially important: it now represents a flattened operational/process projection rather than canonical workplace state semantics.
 
-A legacy technical/presentation file can be retired or relocated when:
+The next pass should either:
 
-1. its represented facts have clear canonical owners;
-2. it links to or accurately projects those owners;
-3. it does not imply unsupported historical production architecture;
-4. no active documentation depends on it as the only explanation.
+- redraw it into several owner-specific diagrams;
+- replace it with a cross-system synthesis diagram;
+- or clearly label any retained flattened diagram as a derived view.
+
+## Completion criterion
+
+The structural migration is complete when:
+
+1. canonical domain knowledge lives only under responsibility owners;
+2. technical projections explicitly depend on canonical knowledge rather than redefine it;
+3. presentation artifacts accurately visualize the current model;
+4. no artifact-oriented legacy tree competes with active knowledge.

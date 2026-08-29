@@ -1,0 +1,628 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Workplace Migration API Projection
+  version: 2.0.0
+  description: |
+    Synthetic portfolio API derived from the SSAD canonical model.
+    This contract is not evidence of a production banking interface.
+servers:
+  - url: /api/v1
+paths:
+  /workplaces:
+    get:
+      summary: List workplaces
+      parameters:
+        - in: query
+          name: environmentState
+          schema:
+            $ref: '#/components/schemas/EnvironmentState'
+      responses:
+        '200':
+          description: Workplace list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workplace'
+  /workplaces/{workplaceId}:
+    get:
+      summary: Get workplace identity and environment state
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+      responses:
+        '200':
+          description: Workplace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workplace'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /workplaces/{workplaceId}/readiness:
+    get:
+      summary: Get latest readiness decision
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+      responses:
+        '200':
+          description: Latest readiness evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessEvaluation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /workplaces/{workplaceId}/operational-view:
+    get:
+      summary: Get derived operational read model
+      description: Aggregates several responsibility-owned facts for operational consumption without owning them.
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+      responses:
+        '200':
+          description: Derived operational view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationalView'
+  /workplaces/{workplaceId}/operational-validations:
+    post:
+      summary: Record operational validation after technical migration
+      parameters:
+        - $ref: '#/components/parameters/WorkplaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperationalValidation'
+      responses:
+        '201':
+          description: Validation recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationalValidation'
+        '409':
+          description: Current evidence does not allow successful operational validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /readiness-evaluations:
+    post:
+      summary: Evaluate current readiness evidence and record a decision snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workplaceId]
+              properties:
+                workplaceId:
+                  type: integer
+                  format: int64
+      responses:
+        '201':
+          description: Readiness evaluation recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessEvaluation'
+  /migration-schedules:
+    post:
+      summary: Create a planned migration schedule
+      description: Current GREEN readiness is checked by the service; readiness is not supplied by the caller.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSchedule'
+      responses:
+        '201':
+          description: Schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+        '409':
+          description: No current GREEN readiness or another active schedule exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /migration-schedules/{scheduleId}:
+    get:
+      summary: Get migration schedule
+      parameters:
+        - in: path
+          name: scheduleId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Schedule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+  /migration-schedules/{scheduleId}/reschedule:
+    post:
+      summary: Supersede an active schedule with a new planned date
+      parameters:
+        - in: path
+          name: scheduleId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plannedDate]
+              properties:
+                plannedDate:
+                  type: string
+                  format: date
+                migrationWave:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: New schedule created; previous schedule is superseded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSchedule'
+  /postponement-requests:
+    post:
+      summary: Register postponement evidence from the approved coordination channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostponement'
+      responses:
+        '201':
+          description: Request registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+  /postponement-requests/{requestId}/approve:
+    post:
+      summary: Approve postponement and create a replacement schedule
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newPlannedDate]
+              properties:
+                newPlannedDate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Postponement approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+  /postponement-requests/{requestId}/reject:
+    post:
+      summary: Reject postponement without changing the active schedule
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: Postponement rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostponementRequest'
+  /migration-attempts:
+    post:
+      summary: Register an immutable migration-attempt fact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMigrationAttempt'
+      responses:
+        '201':
+          description: Attempt registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationAttempt'
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /migration-blockers:
+    post:
+      summary: Register a migration blocker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlocker'
+      responses:
+        '201':
+          description: Blocker registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationBlocker'
+  /migration-blockers/{blockerId}/resolve:
+    post:
+      summary: Resolve blocker impact
+      description: Resolution does not automatically make readiness GREEN; a new readiness evaluation is required.
+      parameters:
+        - in: path
+          name: blockerId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Blocker resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationBlocker'
+  /compatibility-assessments:
+    post:
+      summary: Record compatibility evidence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompatibilityAssessment'
+      responses:
+        '201':
+          description: Assessment recorded
+  /software/{softwareId}/compatibility-assessments:
+    get:
+      summary: List compatibility evidence history
+      parameters:
+        - in: path
+          name: softwareId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Assessment history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompatibilityAssessment'
+components:
+  parameters:
+    WorkplaceId:
+      in: path
+      name: workplaceId
+      required: true
+      schema:
+        type: integer
+        format: int64
+    RequestId:
+      in: path
+      name: requestId
+      required: true
+      schema:
+        type: integer
+        format: int64
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    EnvironmentState:
+      type: string
+      enum:
+        - windows_operational
+        - dual_boot_transition
+        - astra_installed_pending_validation
+        - astra_operational
+    Workplace:
+      type: object
+      required: [workplaceId, userId, currentOs, targetOs, environmentState]
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        profileId:
+          type: integer
+          format: int64
+          nullable: true
+        currentOs:
+          type: string
+        targetOs:
+          type: string
+        environmentState:
+          $ref: '#/components/schemas/EnvironmentState'
+        location:
+          type: string
+          nullable: true
+    ReadinessEvaluation:
+      type: object
+      required: [evaluationId, workplaceId, decision, evaluatedAt]
+      properties:
+        evaluationId:
+          type: integer
+          format: int64
+        workplaceId:
+          type: integer
+          format: int64
+        decision:
+          type: string
+          enum: [green, yellow, red]
+        evaluatedAt:
+          type: string
+          format: date-time
+        reasonSummary:
+          type: string
+          nullable: true
+    CreateSchedule:
+      type: object
+      required: [workplaceId, plannedDate]
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+        plannedDate:
+          type: string
+          format: date
+        migrationWave:
+          type: string
+          nullable: true
+    MigrationSchedule:
+      type: object
+      required: [scheduleId, workplaceId, plannedDate, scheduleStatus]
+      properties:
+        scheduleId:
+          type: integer
+          format: int64
+        workplaceId:
+          type: integer
+          format: int64
+        plannedDate:
+          type: string
+          format: date
+        migrationWave:
+          type: string
+          nullable: true
+        scheduleStatus:
+          type: string
+          enum: [active, superseded, completed, cancelled]
+        supersededByScheduleId:
+          type: integer
+          format: int64
+          nullable: true
+    CreatePostponement:
+      type: object
+      required: [workplaceId, serviceDeskTicketId, reason]
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+        serviceDeskTicketId:
+          type: string
+        reason:
+          type: string
+    PostponementRequest:
+      type: object
+      required: [requestId, workplaceId, serviceDeskTicketId, reason, decision]
+      properties:
+        requestId:
+          type: integer
+          format: int64
+        workplaceId:
+          type: integer
+          format: int64
+        serviceDeskTicketId:
+          type: string
+        reason:
+          type: string
+        decision:
+          type: string
+          enum: [pending, approved, rejected]
+        replacementScheduleId:
+          type: integer
+          format: int64
+          nullable: true
+    CreateMigrationAttempt:
+      type: object
+      required: [externalAttemptId, sourceSystem, workplaceId, executionType, result, startedAt]
+      properties:
+        externalAttemptId:
+          type: string
+        sourceSystem:
+          type: string
+        workplaceId:
+          type: integer
+          format: int64
+        executionType:
+          type: string
+          enum: [automated, manual]
+        result:
+          type: string
+          enum: [successful, failed]
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        technicalError:
+          type: string
+          nullable: true
+    MigrationAttempt:
+      allOf:
+        - $ref: '#/components/schemas/CreateMigrationAttempt'
+        - type: object
+          required: [attemptId]
+          properties:
+            attemptId:
+              type: integer
+              format: int64
+    CreateBlocker:
+      type: object
+      required: [workplaceId, blockerType, description]
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+        blockerType:
+          type: string
+        description:
+          type: string
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+    MigrationBlocker:
+      allOf:
+        - $ref: '#/components/schemas/CreateBlocker'
+        - type: object
+          required: [blockerId, status, createdAt]
+          properties:
+            blockerId:
+              type: integer
+              format: int64
+            status:
+              type: string
+              enum: [open, in_progress, resolved]
+            createdAt:
+              type: string
+              format: date-time
+            resolvedAt:
+              type: string
+              format: date-time
+              nullable: true
+    CreateCompatibilityAssessment:
+      type: object
+      required: [softwareId, compatibilityStatus, assessedAt]
+      properties:
+        softwareId:
+          type: integer
+          format: int64
+        compatibilityStatus:
+          type: string
+          enum: [compatible, partial, under_development, no_replacement, unknown]
+        assessedAt:
+          type: string
+          format: date-time
+        responsibleTeamId:
+          type: integer
+          format: int64
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    CompatibilityAssessment:
+      allOf:
+        - $ref: '#/components/schemas/CreateCompatibilityAssessment'
+        - type: object
+          required: [assessmentId]
+          properties:
+            assessmentId:
+              type: integer
+              format: int64
+    CreateOperationalValidation:
+      type: object
+      required: [businessCapabilityAvailable, requiredAccessAvailable, noBlockingExceptions]
+      properties:
+        businessCapabilityAvailable:
+          type: boolean
+        requiredAccessAvailable:
+          type: boolean
+        noBlockingExceptions:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+    OperationalValidation:
+      allOf:
+        - $ref: '#/components/schemas/CreateOperationalValidation'
+        - type: object
+          required: [validationId, workplaceId, result, validatedAt]
+          properties:
+            validationId:
+              type: integer
+              format: int64
+            workplaceId:
+              type: integer
+              format: int64
+            result:
+              type: string
+              enum: [passed, failed]
+            validatedAt:
+              type: string
+              format: date-time
+    OperationalView:
+      type: object
+      required: [workplaceId, environmentState, operationallyMigrated]
+      properties:
+        workplaceId:
+          type: integer
+          format: int64
+        environmentState:
+          $ref: '#/components/schemas/EnvironmentState'
+        latestReadiness:
+          type: string
+          enum: [green, yellow, red]
+          nullable: true
+        activeScheduleId:
+          type: integer
+          format: int64
+          nullable: true
+        latestAttemptId:
+          type: integer
+          format: int64
+          nullable: true
+        openBlockerCount:
+          type: integer
+        operationallyMigrated:
+          type: boolean
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          nullable: true

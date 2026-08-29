@@ -4,17 +4,17 @@
 
 ![System Analysis](https://img.shields.io/badge/System%20Analysis-Enterprise%20Case-222222)
 ![SSAD](https://img.shields.io/badge/Methodology-SSAD-111111)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-Projection-6BA539)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Projection-336791)
 ![PlantUML](https://img.shields.io/badge/PlantUML-Diagrams-8A2BE2)
 
 ---
 
 ## What this case is about
 
-This repository reconstructs a real enterprise migration programme through the **SSAD — System-Structured Analysis Documentation** methodology.
+This repository reconstructs a real enterprise migration programme through **SSAD — System-Structured Analysis Documentation**.
 
-The analytical object is not “install Astra Linux”.
-
-It is the controlled evolution of an employee workplace while preserving the capability to perform required business activity.
+The analytical object is not simply “install Astra Linux”. It is the controlled evolution of an employee workplace while preserving the capability to perform required business activity.
 
 ```text
 User business activity
@@ -28,6 +28,8 @@ Planning / migration wave
 Execution attempt
         ↓
 Exception / recovery if needed
+        ↓
+Operational validation
         ↓
 Operationally migrated workplace
 ```
@@ -61,23 +63,21 @@ The central analytical question is:
 
 ## System-shaped knowledge structure
 
-The active analytical knowledge is organized around real responsibility areas rather than artifact types.
-
 ```text
 system/
 ├─ cross-system boundary, invariants, data ownership, history and synthesis
 │
 workplace/
-├─ AS-IS workplace profiles, environment meaning and operational states
+├─ AS-IS profiles, environment meaning and operational states
 │
 readiness/
-├─ dependency evidence and aggregate migration eligibility decision
+├─ dependency evidence and aggregate eligibility decision
 │
 planning/
 ├─ migration waves, active plans, dates and postponement
 │
 execution/
-├─ actual automated/manual migration attempts and technical outcomes
+├─ actual automated/manual attempts and technical outcomes
 │
 exceptions/
 ├─ blockers, remediation, transition strategies and recovery
@@ -86,12 +86,15 @@ integrations/
 ├─ Service Desk, tooling, notifications and specialized support boundaries
 │
 technical-projection/
-└─ hypothetical API / database representation for portfolio purposes
+├─ synthetic REST / OpenAPI / PostgreSQL representation
+│
+diagrams/
+└─ presentation artifacts pending final validation
 ```
 
 Start with [`system/`](system/README.md).
 
-The previous artifact-oriented `docs/` package has been decomposed into these canonical owners and removed from the active tree. Historical versions remain available in Git history.
+The former artifact-oriented `docs/`, `api/` and `sql/` trees have been decomposed or redesigned and removed from the active root. Historical versions remain available in Git history.
 
 ---
 
@@ -102,9 +105,9 @@ flowchart TD
     W[Workplace] --> R[Readiness]
     R --> P[Planning]
     P --> E[Execution]
-    E --> X{Normal result?}
-    X -- yes --> O[Operational validation]
-    X -- no --> F[Exceptions / Recovery]
+    E --> X{Technical result}
+    X -- success --> O[Operational validation]
+    X -- failure --> F[Exceptions / Recovery]
     F --> R
     O --> S[System synthesis]
 
@@ -114,35 +117,20 @@ flowchart TD
     I --> F
 ```
 
-### [`workplace/`](workplace/README.md)
-
-Owns what environment exists and whether the workplace is operational. It also preserves the real AS-IS variability of office, remote, restricted, developer and specialized workplace profiles.
-
-### [`readiness/`](readiness/README.md)
-
-Owns the aggregate decision that current evidence is sufficient to migrate safely.
-
-### [`planning/`](planning/README.md)
-
-Owns when migration is intended to happen and whether an active plan has been postponed or superseded.
-
-### [`execution/`](execution/README.md)
-
-Owns what actually happened during a migration attempt.
-
-### [`exceptions/`](exceptions/README.md)
-
-Owns deviations from the normal path: blockers, remediation, manual recovery and return to readiness.
-
-### [`integrations/`](integrations/README.md)
-
-Owns the migration meaning of facts/capabilities crossing external boundaries without re-modeling adjacent systems internally.
+| Area | Canonical question |
+|---|---|
+| [`workplace/`](workplace/README.md) | What working environment exists and is it operational? |
+| [`readiness/`](readiness/README.md) | May normal migration safely proceed now? |
+| [`planning/`](planning/README.md) | When is migration intended to happen? |
+| [`execution/`](execution/README.md) | What actually happened during an attempt? |
+| [`exceptions/`](exceptions/README.md) | What condition changes the normal path and how is recovery handled? |
+| [`integrations/`](integrations/README.md) | What evidence/capabilities cross external ownership boundaries? |
 
 ---
 
 ## The old global status was decomposed
 
-One of the largest changes introduced by the SSAD restructuring is that values such as:
+The original portfolio model used one broad `migration_status` vocabulary containing values such as:
 
 ```text
 Scheduled
@@ -154,17 +142,26 @@ Dual Boot
 Migrated
 ```
 
-are no longer assumed to belong to one giant workplace state machine.
+SSAD exposed that these do not belong to one responsibility.
 
-They describe different responsibility dimensions:
+```text
+Workplace environment
+Readiness
+Planning
+Execution
+Exceptions
+```
 
-| Dimension | Question | Owner |
-|---|---|---|
-| workplace state | what environment exists and is it operational? | `workplace/` |
-| readiness | may normal migration proceed? | `readiness/` |
-| planning | when is migration intended to happen? | `planning/` |
-| execution | what is happening / what happened in an attempt? | `execution/` |
-| exception | what unresolved condition changes the normal path? | `exceptions/` |
+A workplace can therefore be represented honestly as:
+
+```text
+Environment = Windows Operational
+Readiness = RED
+Planning = Postponed
+Exception = Missing critical software
+```
+
+without inventing one giant state machine.
 
 See [`workplace/states.md`](workplace/states.md) and [`system/data-ownership.md`](system/data-ownership.md).
 
@@ -173,8 +170,6 @@ See [`workplace/states.md`](workplace/states.md) and [`system/data-ownership.md`
 ## Core invariants
 
 The detailed canonical list lives in [`system/invariants.md`](system/invariants.md).
-
-Key examples:
 
 ```text
 Astra installed
@@ -186,24 +181,22 @@ MigrationSchedule
 external evidence
 != internal migration authority
 
-blocked
-!= removed from migration programme
+blocker resolved
+!= readiness automatically GREEN
 
 dual boot
 != final migrated state
 
-reporting status
+derived reporting view
 != canonical domain state
 
-technical API/database projection
+technical projection
 != historical production architecture
 ```
 
 ---
 
-## Migration readiness
-
-Readiness consumes evidence from several independently owned areas:
+## Readiness is a decision over evidence
 
 ```text
 Business capability required
@@ -221,7 +214,7 @@ Cross-team evidence
 GREEN / YELLOW / RED
 ```
 
-`GREEN / YELLOW / RED` is a time-sensitive decision over current evidence, not an immutable property of the workplace.
+`GREEN / YELLOW / RED` is a time-sensitive evaluation, not an immutable workplace property.
 
 > **Evidence is distributed. System meaning must still be explicit.**
 
@@ -229,50 +222,82 @@ See [`readiness/evidence-model.md`](readiness/evidence-model.md) and [`readiness
 
 ---
 
-## Planning and execution are different facts
+## Planning and execution are different histories
 
 ```text
 MigrationSchedule
-→ planned migration
+→ intention
 
 MigrationAttempt
-→ actual execution
+→ actual execution fact
 ```
 
-This distinction supports:
-
-- repeated rescheduling;
-- user postponements;
-- failed automated attempts;
-- manual recovery;
-- explainable migration history.
+This distinction supports repeated rescheduling, postponements, failed automation, manual recovery and explainable history.
 
 See [`planning/scheduling-and-postponement.md`](planning/scheduling-and-postponement.md) and [`execution/attempt-model.md`](execution/attempt-model.md).
 
 ---
 
-## Normal and exception paths
+## Technical projection
 
-```mermaid
-flowchart TD
-    A[Readiness allows migration] --> B[Active plan / user notified]
-    B --> C{Postponement or blocker?}
-    C -- approved postponement --> D[Supersede plan / reschedule]
-    D --> A
-    C -- blocker --> I[Exception / remediation]
-    I --> J[Revalidate readiness]
-    J --> A
-    C -- no --> E[Automated attempt]
-    E --> F{Technical result}
-    F -- success --> G[Astra installed / operational validation]
-    F -- failure --> H[Manual recovery / exception]
-    H --> G
-    G --> K[Astra Operational]
+The reconstructed domain is projected into a synthetic implementation model under [`technical-projection/`](technical-projection/README.md).
+
+```text
+canonical SSAD knowledge
+        ↓
+technical projection
+        ↓
+REST / OpenAPI / PostgreSQL
 ```
 
-The blocker/recovery path is a first-class part of the system model, not just “error handling”.
+### API
 
-See [`exceptions/blockers-and-recovery.md`](exceptions/blockers-and-recovery.md).
+[`technical-projection/api/`](technical-projection/api/README.md) demonstrates an ownership-aware REST projection.
+
+Key corrections from the former API:
+
+- no one global `migrationStatus`;
+- schedule requests do not contain `readinessStatus`;
+- reschedule / postponement / blocker resolution are explicit operations rather than arbitrary status PATCHes;
+- external tooling reports attempt facts rather than directly setting workplace meaning;
+- technical success requires separate operational validation;
+- `operational-view` is explicitly a derived read model.
+
+Machine-readable contract: [`technical-projection/api/openapi.yaml`](technical-projection/api/openapi.yaml).
+
+### Data
+
+[`technical-projection/data/`](technical-projection/data/README.md) demonstrates a normalized PostgreSQL projection.
+
+Key separation:
+
+```text
+workplaces.environment_state
+→ Workplace
+
+readiness_evaluations
+→ Readiness
+
+migration_schedules
+→ Planning
+
+migration_attempts
+→ Execution
+
+migration_blockers
+→ Exceptions
+
+operational_validations
+→ completion verification
+```
+
+The database also exposes a derived `workplace_operational_view` for operational reporting without turning that joined representation into a semantic owner.
+
+Files:
+
+- [`schema.sql`](technical-projection/data/schema.sql)
+- [`sample-data.sql`](technical-projection/data/sample-data.sql)
+- [`analysis-queries.sql`](technical-projection/data/analysis-queries.sql)
 
 ---
 
@@ -289,49 +314,25 @@ Relevant adjacent systems and teams include:
 - Telephony and other specialized support domains;
 - vendor/development teams.
 
-The migration model consumes evidence/capabilities from these domains without claiming ownership of their internals.
+The migration model consumes evidence and capabilities from these domains without claiming ownership of their internals.
 
 See [`integrations/boundary-contracts.md`](integrations/boundary-contracts.md).
 
 ---
 
-## Data ownership, history and reporting
+## Traceability of the restructuring
 
-The migration knowledge is not organized around one database schema.
+Legacy `BR-*`, `FR-*`, `NFR-*` and `AC-*` identifiers remain in canonical documents as historical traceability anchors, not as repository architecture.
 
-[`system/data-ownership.md`](system/data-ownership.md) maps significant facts to their canonical owners.
-
-[`system/history-and-reporting.md`](system/history-and-reporting.md) shows how planning, readiness, execution, exception and workplace facts combine into an explainable timeline and operational reporting views without creating a second source of truth.
+The migration audit is documented in [`system/legacy-knowledge-map.md`](system/legacy-knowledge-map.md).
 
 ---
 
-## Technical projection
+## Remaining pass: diagrams
 
-The repository also contains a hypothetical portfolio implementation of the reconstructed domain using REST, OpenAPI and PostgreSQL.
+[`diagrams/`](diagrams/) is now the only remaining artifact-oriented area.
 
-This material is useful for demonstrating implementation-aware analysis, but it is **not evidence of the original production architecture**.
-
-```text
-Canonical migration knowledge
-        ↓
-technical projection
-        ↓
-REST / OpenAPI / SQL
-```
-
-See [`technical-projection/`](technical-projection/README.md).
-
-The existing [`api/`](api/) and [`sql/`](sql/) directories are the remaining legacy technical-projection sources and will be normalized in a separate pass. [`diagrams/`](diagrams/) remains presentation infrastructure while its useful visuals are validated against the new canonical model.
-
----
-
-## Traceability during restructuring
-
-Legacy `BR-*`, `FR-*`, `NFR-*` and `AC-*` identifiers were retained inside the new canonical documents as migration anchors.
-
-They help prove that rules and verification conditions were not lost, but they no longer determine repository structure.
-
-See [`system/legacy-knowledge-map.md`](system/legacy-knowledge-map.md).
+The visuals still need to be validated against the current model. In particular, the old global workplace state machine should no longer be presented as canonical because SSAD decomposed it into several responsibility dimensions.
 
 ---
 
@@ -341,11 +342,9 @@ This case is structured with:
 
 **[SSAD — System-Structured Analysis Documentation](https://github.com/branch-danya-dev/ssad-methodology)**
 
-SSAD principle demonstrated by this restructuring:
-
 > **The system determines the knowledge structure. Document types do not.**
 
-This enterprise case is deliberately different from the Aveli product example and is used to validate whether SSAD survives a distributed migration programme with cross-team ownership and operational state.
+This enterprise migration is deliberately different from the Aveli product case and acts as a second real-world validation of SSAD against distributed ownership, operational evidence and enterprise-scale change.
 
 ---
 
@@ -357,7 +356,7 @@ Internal names, organization-specific processes, employee data, technical identi
 
 The repository does not contain original internal documentation, production data, confidential infrastructure information or proprietary source code.
 
-The API, database schema and some detailed contracts are educational portfolio projections created after the real migration experience.
+The REST API, OpenAPI contract, PostgreSQL schema and detailed technical projections are educational portfolio artifacts created after the real migration experience.
 
 ---
 

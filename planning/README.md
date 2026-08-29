@@ -2,13 +2,13 @@
 
 This area owns the planned position of a workplace in the migration programme.
 
-## Canonical facts
+Planning answers:
 
-- planned migration date;
-- migration wave / sequencing position;
-- active vs superseded schedule;
-- postponement state and decision;
-- rescheduled date after an approved postponement.
+> **When is migration intended to happen, and how does that intention change?**
+
+## Canonical document
+
+→ [`scheduling-and-postponement.md`](scheduling-and-postponement.md) owns migration-wave/date semantics, user notification, postponement review and rescheduling rules.
 
 ## Core distinction
 
@@ -20,41 +20,45 @@ MigrationAttempt
 = actual execution
 ```
 
-A workplace can be rescheduled many times without creating execution history. Likewise, a failed attempt does not erase the plan that led to it.
+A workplace can be rescheduled multiple times without creating execution history. Likewise, a failed attempt does not erase the plan that led to it.
 
-## Planning flow
+## Planning consumes readiness
+
+Planning does not manufacture migration eligibility.
 
 ```text
-Readiness evidence
+Readiness decision
       ↓
-Workplace selected for wave
+Planning / migration wave
       ↓
-Migration date assigned
+active date
       ↓
-User notified
-      ↓
-Postponement requested?
-   ├─ No  → schedule remains active
-   └─ Yes → review
-               ├─ rejected → original schedule remains
-               └─ approved → old date superseded
-                              ↓
-                           new date
+Execution gate
 ```
+
+If readiness becomes invalid or a blocker appears, an existing date does not override that evidence.
 
 ## Postponement boundary
 
-A postponement request is evidence that the current plan may be unsafe or impractical. The request itself does not automatically change the schedule.
+A postponement request is a formal claim that the current plan should be reconsidered.
 
-The decision must be recorded through the approved support/coordination process.
+The request itself does not change the canonical schedule. An approved planning decision does.
+
+The reason may also reveal evidence belonging to `readiness/` or `exceptions/`.
 
 ## Ownership boundary
 
-Planning owns **when migration is intended to happen**.
+Planning owns:
+
+- migration wave/sequence;
+- planned date;
+- active vs superseded plan;
+- postponement decision as it affects the plan;
+- rescheduled date.
 
 It does not own:
 
-- whether the workplace is technically/operationally ready — [`readiness/`](../readiness/);
+- technical/operational readiness — [`readiness/`](../readiness/);
 - what happened during execution — [`execution/`](../execution/);
-- the internal Service Desk process — [`integrations/`](../integrations/);
+- Service Desk internals — [`integrations/`](../integrations/);
 - blocker remediation — [`exceptions/`](../exceptions/).

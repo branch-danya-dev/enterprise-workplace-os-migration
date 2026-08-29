@@ -57,7 +57,8 @@ are cross-system invariants satisfied?
 - [`invariants.md`](invariants.md) — properties that every local model and migration path must preserve;
 - [`data-ownership.md`](data-ownership.md) — which responsibility owns each significant fact and why one global `migration_status` is insufficient;
 - [`history-and-reporting.md`](history-and-reporting.md) — cross-owner migration history, operational views and consistency questions;
-- [`legacy-knowledge-map.md`](legacy-knowledge-map.md) — temporary migration map from artifact-oriented legacy files to canonical SSAD owners.
+- [`visual-models.md`](visual-models.md) — rendered Mermaid synthesis of responsibilities, independent dimensions and the end-to-end migration flow;
+- [`legacy-knowledge-map.md`](legacy-knowledge-map.md) — audit map from the former artifact-oriented structure to canonical SSAD owners.
 
 ## Core distinctions
 
